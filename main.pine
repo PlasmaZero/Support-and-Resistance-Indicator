@@ -1,0 +1,52 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © PlasmaZero
+
+//@version=6
+indicator("Auto Support & Resistance (Pivots) v2", overlay = true, max_lines_count = 500)
+
+// Inputs
+leftBars   = input.int(5,  "Pivot Left Bars",  minval = 1, maxval = 20)
+rightBars  = input.int(5,  "Pivot Right Bars", minval = 1, maxval = 20)
+maxLevels  = input.int(10, "Max Levels",       minval = 1, maxval = 50)
+
+showSupport    = input.bool(true,  "Show Support Levels")
+showResistance = input.bool(true,  "Show Resistance Levels")
+
+// Pivots
+ph = ta.pivothigh(high, leftBars, rightBars)
+pl = ta.pivotlow(low,  leftBars, rightBars)
+
+// Arrays to store lines
+var line[] resLines = array.new_line()
+var line[] supLines = array.new_line()
+
+// Resistance from pivot highs
+if showResistance and not na(ph)
+    int   x  = bar_index - rightBars
+    float y  = ph
+    line ln = line.new(x, y, bar_index, y,xloc   = xloc.bar_index,extend = extend.right,color  = color.new(color.red, 0),width  = 1)
+    array.push(resLines, ln)
+
+    if array.size(resLines) > maxLevels
+        line old = array.shift(resLines)
+        line.delete(old)
+
+// Support from pivot lows
+if showSupport and not na(pl)
+    int   x2 = bar_index - rightBars
+    float y2 = pl
+    line ln2 = line.new(x2, y2, bar_index, y2,xloc   = xloc.bar_index,extend = extend.right,color  = color.new(color.lime, 0),width  = 1)
+    array.push(supLines, ln2)
+
+    if array.size(supLines) > maxLevels
+        line old2 = array.shift(supLines)
+        line.delete(old2)
+
+// Mark pivots
+plotshape(not na(ph), title = "Pivot High",
+          style = shape.triangledown, location = location.abovebar,
+          color = color.red, size = size.tiny)
+
+plotshape(not na(pl), title = "Pivot Low",
+          style = shape.triangleup, location = location.belowbar,
+          color = color.lime, size = size.tiny)
